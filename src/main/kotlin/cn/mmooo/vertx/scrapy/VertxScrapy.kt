@@ -57,7 +57,7 @@ class LocalRequestHolder(
         deque.addLast(request)
     }
 
-    override fun poll(): Request? = deque.pollLast()
+    override fun poll(): Request? = deque.pollFirst()
 }
 
 /**
@@ -92,15 +92,15 @@ class SetDuplicationPredictor<T>(
 
 
 interface ItemPipe {
-    fun init()
-    fun processItem(item: Item)
+    fun init(vertx: Vertx)
+    suspend fun processItem(item: Item)
     fun stop()
 }
 
 class PrintItemPipe : ItemPipe {
-    override fun init() {}
+    override fun init(vertx: Vertx) {}
 
-    override fun processItem(item: Item) {
+    override suspend fun processItem(item: Item) {
         println(item)
     }
 
@@ -283,7 +283,7 @@ class VertxScrapyVerticle(
     }
 
     override suspend fun start() {
-        options.itemPipe.init()
+        options.itemPipe.init(vertx)
         repeat(options.concurrentSize) {
             launch {
                 runSpider()
