@@ -31,36 +31,18 @@ fun main() {
     deployVertxSpider(*requests, options = VertxSpiderOptions(
             concurrentSize = 10,
             delayMs = 500,
-            itemPipe = JobItemPipe() // 这里设置了处理item的对象
+            pipeline = Json2FilePipeline("jobs.json") // 这里设置了处理item的对象
     ))
 
 }
 
-class JobItemPipe : ItemPipe {
-
-    private lateinit var file: AsyncFile
-
-    override suspend fun processItem(item: Item) {
-        file.write(item.data.toBuffer().appendString(",\n"))
-    }
-
-    override fun stop() {
-        file.close()
-    }
-
-    override fun init(vertx: Vertx) {
-        file = vertx.fileSystem().openBlocking("jobs.json", openOptionsOf(append = true, write = true))
-    }
-
-
-}
 
 fun parseBody(resp: HttpResponse<Buffer>, req: Request) = sequence<CrawlData> {
     // 响应体是个 json
     val jobs: JsonArray? = resp.bodyAsJsonObject().getJsonObject("Data").getJsonArray("Posts")
     jobs?.forEach {
         if (it is JsonObject) {
-            yield(Item(it)) // 这里返回item 会被设置好的 JobItemPipe 处理
+            yield(Item(it)) // 这里返回item 会被设置好的 Json2FilePipeline 处理
         }
     }
 

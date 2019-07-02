@@ -11,7 +11,9 @@ import io.vertx.ext.web.client.WebClient
 import io.vertx.kotlin.circuitbreaker.circuitBreakerOptionsOf
 import io.vertx.kotlin.circuitbreaker.executeCommandAwait
 import io.vertx.kotlin.core.deploymentOptionsOf
+import io.vertx.kotlin.core.executeBlockingAwait
 import io.vertx.kotlin.core.json.jsonObjectOf
+import io.vertx.kotlin.core.vertxOptionsOf
 import io.vertx.kotlin.coroutines.CoroutineVerticle
 import io.vertx.kotlin.coroutines.awaitBlocking
 import io.vertx.kotlin.ext.web.client.sendBufferAwait
@@ -34,15 +36,15 @@ data class VertxSpiderOptions(
         val delayMs: Long = 5000,
         val concurrentSize: Int = 2,
         val isWorkerMode: Boolean = false,
-        val itemPipe: ItemPipe = PrintItemPipe()
+        val pipeline: Pipeline = PrintPipeline()
 )
 
 /**
  * 保存request的容器
  */
 interface RequestHolder {
-    fun add(request: Request)
-    fun poll(): Request?
+    fun push(request: Request)
+    fun pop(): Request?
 }
 
 /**
@@ -53,11 +55,11 @@ class LocalRequestHolder(
 ) : RequestHolder {
 
 
-    override fun add(request: Request) {
+    override fun push(request: Request) {
         deque.addLast(request)
     }
 
-    override fun poll(): Request? = deque.pollFirst()
+    override fun pop(): Request? = deque.pollFirst()
 }
 
 /**
@@ -65,11 +67,11 @@ class LocalRequestHolder(
  */
 class RedisRequestHolder(
 ) : RequestHolder {
-    override fun add(request: Request) {
+    override fun push(request: Request) {
         TODO()
     }
 
-    override fun poll(): Request? = TODO()
+    override fun pop(): Request? = TODO()
 }
 
 /**
@@ -91,20 +93,20 @@ class SetDuplicationPredictor<T>(
 }
 
 
-interface ItemPipe {
-    fun init(vertx: Vertx)
-    suspend fun processItem(item: Item)
-    fun stop()
+interface Pipeline {
+    fun open(vertx: Vertx)
+    suspend fun process(item: Item)
+    fun close()
 }
 
-class PrintItemPipe : ItemPipe {
-    override fun init(vertx: Vertx) {}
+class PrintPipeline : Pipeline {
+    override fun open(vertx: Vertx) {}
 
-    override suspend fun processItem(item: Item) {
+    override suspend fun process(item: Item) {
         println(item)
     }
 
-    override fun stop() {}
+    override fun close() {}
 }
 
 /**
@@ -113,12 +115,14 @@ class PrintItemPipe : ItemPipe {
 fun deployVertxSpider(
         vararg req: Request,
         options: VertxSpiderOptions = VertxSpiderOptions()) {
-    Vertx.vertx().deployVerticle(VertxScrapyVerticle(req.toList(), options), deploymentOptionsOf(
+    val vertx = Vertx.vertx()
+
+    vertx.deployVerticle(VertxScrapyVerticle(req.toList(), options), deploymentOptionsOf(
             worker = options.isWorkerMode
     ))
 }
 
-typealias Callback = (resp: HttpResponse<Buffer>, req: Request) -> Sequence<CrawlData>
+typealias Parser = (resp: HttpResponse<Buffer>, req: Request) -> Sequence<CrawlData>
 
 sealed class CrawlData
 
@@ -174,9 +178,9 @@ data class Request(
          */
         val body: String = "",
         /**
-         * 元数据  可以用来传到 parse里, 跨parse传数据用
+         * 元数据  可以用来传到 parse里, 跨parser传数据用
          */
-        val meteData: JsonObject? = null,
+        val metaData: JsonObject = JsonObject(),
         /**
          * 解析body时的编码
          */
@@ -184,12 +188,12 @@ data class Request(
         /**
          * 解析器, 解析 response 时用
          */
-        val paeser: Callback? = null
+        val paeser: Parser = ::defaultParser
 ) : CrawlData()
 
 class VertxScrapyVerticle(
         startURL: Collection<Request>,
-        private val options: VertxSpiderOptions
+        private val options: VertxSpiderOptions = VertxSpiderOptions()
 ) : CoroutineVerticle() {
     /**
      * 保存待 爬取 的链接
@@ -197,7 +201,7 @@ class VertxScrapyVerticle(
     private val requests: RequestHolder = LocalRequestHolder()
 
     init {
-        startURL.forEach(requests::add)
+        startURL.forEach(requests::push)
     }
 
     /**
@@ -213,11 +217,12 @@ class VertxScrapyVerticle(
      */
     private val done = ConcurrentHashSet<Int>()
 
+    lateinit var webClient: WebClient
     private suspend fun runSpider() {
         while (true) {
-            val req: Request? = requests.poll()
+            val req: Request? = requests.pop()
             if (req == null) {
-                logger.warn("no more Reqest to be crawled !")
+                logger.warn("no more Request to crawl !")
                 delay(TimeUnit.SECONDS.toMillis(5))
                 continue
             }
@@ -231,14 +236,10 @@ class VertxScrapyVerticle(
                             resetTimeout = 5000
                     ))
 
+
             val response = circuitBreaker.executeCommandAwait<HttpResponse<Buffer>> {
                 launch {
-                    val response = WebClient.create(vertx, webClientOptionsOf(
-                            keepAlive = false,
-                            tcpFastOpen = true,
-                            tcpKeepAlive = false,
-                            connectTimeout = 0
-                    )).requestAbs(req.method, req.url.toString())
+                    val response = webClient.requestAbs(req.method, req.url.toString())
                             .apply {
                                 req.headers.forEach { (k, v) ->
                                     putHeader(k, v)
@@ -256,34 +257,37 @@ class VertxScrapyVerticle(
                 continue
             }
             doneContentHash.add(hashCode)
-            val sequence =
-                    awaitBlocking {
-                        if (req.paeser == null) {
-                            parse(response, req)
-                        } else {
-                            (req.paeser)(response, req)
-                        }
-                    }
+            val sequence: Sequence<CrawlData> = vertx.executeBlockingAwait<Sequence<CrawlData>>({ (req.paeser)(response, req) }, true)!!
+
             sequence.forEach {
                 when (it) {
                     is Item -> {
                         if (!done.contains(it.hashCode())) {
                             done.add(it.hashCode())
-                            options.itemPipe.processItem(it)
+                            options.pipeline.process(it)
                         }
                     }
                     is Request -> {
-                        it.takeUnless(doneRequest::contains)?.let(requests::add)
+                        it.takeUnless(doneRequest::contains)?.let(requests::push)
                     }
                 }
             }
+
             if (options.delayMs > 0)
                 delay(options.delayMs)
         }
     }
 
     override suspend fun start() {
-        options.itemPipe.init(vertx)
+        webClient = WebClient.create(vertx, webClientOptionsOf(
+                keepAlive = false,
+                tcpFastOpen = true,
+                tcpKeepAlive = false,
+                connectTimeout = 0,
+                reuseAddress = true
+        ))
+        options.pipeline.open(vertx)
+
         repeat(options.concurrentSize) {
             launch {
                 runSpider()
@@ -293,13 +297,14 @@ class VertxScrapyVerticle(
     }
 
     override suspend fun stop() {
-        options.itemPipe.stop()
+        options.pipeline.close()
         super.stop()
     }
 
-    private fun parse(resp: HttpResponse<Buffer>, req: Request): Sequence<CrawlData> = sequence {
-        logger.warn("没有指定任何解析器，使用系统默认解析器")
-        yield(Item(jsonObjectOf("body" to resp.bodyAsString())))
-    }
+}
+
+private fun defaultParser(resp: HttpResponse<Buffer>, req: Request): Sequence<CrawlData> = sequence {
+    logger.warn("没有指定任何解析器，使用系统默认解析器")
+    yield(Item(jsonObjectOf("body" to resp.bodyAsString())))
 }
 

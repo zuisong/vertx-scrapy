@@ -14,8 +14,9 @@ fun main() {
             paeser = ::parseListPage //parser 回调
     )
     val vertxSpiderOptions = VertxSpiderOptions(
-            concurrentSize = 5, // 并发数 5
-            delayMs = 1000 // 每个并发爬完一个页面延时 1s
+            concurrentSize = 100, // 并发数 5
+            delayMs = 100, // 每个并发爬完一个页面延时 1s
+            pipeline = Json2FilePipeline("xiumeim.json")
     )
     deployVertxSpider(httpRequest, options = vertxSpiderOptions)
 
