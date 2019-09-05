@@ -7,7 +7,7 @@ plugins {
 group = "cn.mmooo"
 version = "0.1.0"
 
-val vertx_version = "3.8.1"
+val vertx_version ="4.0.0-milestone2"
 val logback_version = "1.2.3"
 val jsoup_version = "1.12.1"
 dependencies {
