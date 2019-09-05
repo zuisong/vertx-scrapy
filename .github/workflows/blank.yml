@@ -13,4 +13,4 @@ jobs:
       run: echo Hello, world!
     - name: Run a multi-line script
       run: |
-        gradlew build
+        bash ./gradlew build
