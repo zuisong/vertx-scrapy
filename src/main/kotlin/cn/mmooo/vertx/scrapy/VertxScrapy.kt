@@ -11,23 +11,21 @@ import io.vertx.ext.web.client.WebClient
 import io.vertx.kotlin.circuitbreaker.circuitBreakerOptionsOf
 import io.vertx.kotlin.circuitbreaker.executeCommandAwait
 import io.vertx.kotlin.core.deploymentOptionsOf
-import io.vertx.kotlin.core.executeBlockingAwait
 import io.vertx.kotlin.core.json.jsonObjectOf
-import io.vertx.kotlin.core.vertxOptionsOf
 import io.vertx.kotlin.coroutines.CoroutineVerticle
-import io.vertx.kotlin.coroutines.awaitBlocking
 import io.vertx.kotlin.ext.web.client.sendBufferAwait
 import io.vertx.kotlin.ext.web.client.webClientOptionsOf
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.lang.invoke.MethodHandles
 import java.net.URL
 import java.util.*
 import java.util.concurrent.ConcurrentLinkedDeque
 import java.util.concurrent.TimeUnit
 
-val logger: Logger = LoggerFactory.getLogger("vertx-scrapy")
+val logger: Logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass())
 
 /**
  * @author zuisong
@@ -43,8 +41,8 @@ data class VertxSpiderOptions(
  * 保存request的容器
  */
 interface RequestHolder {
-    fun push(request: Request)
-    fun pop(): Request?
+    suspend fun push(request: Request)
+    suspend fun pop(): Request?
 }
 
 /**
@@ -55,24 +53,13 @@ class LocalRequestHolder(
 ) : RequestHolder {
 
 
-    override fun push(request: Request) {
+    override suspend fun push(request: Request) {
         deque.addLast(request)
     }
 
-    override fun pop(): Request? = deque.pollFirst()
+    override suspend fun pop(): Request? = deque.pollFirst()
 }
 
-/**
- * 本机内存里的request容器
- */
-class RedisRequestHolder(
-) : RequestHolder {
-    override fun push(request: Request) {
-        TODO()
-    }
-
-    override fun pop(): Request? = TODO()
-}
 
 /**
  * 保存已经爬取的数据, 避免重新爬取
@@ -188,21 +175,32 @@ data class Request(
         /**
          * 解析器, 解析 response 时用
          */
-        val paeser: Parser = ::defaultParser
+        val parser: Parser = ::defaultParser
 ) : CrawlData()
 
 class VertxScrapyVerticle(
-        startURL: Collection<Request>,
+        private val startURL: Collection<Request>,
         private val options: VertxSpiderOptions = VertxSpiderOptions()
 ) : CoroutineVerticle() {
     /**
      * 保存待 爬取 的链接
      */
-    private val requests: RequestHolder = LocalRequestHolder()
+    private val requests: RequestHolder
+            by lazy {
+                LocalRequestHolder()
+            }
 
-    init {
-        startURL.forEach(requests::push)
-    }
+
+    private val circuitBreaker: CircuitBreaker
+            by lazy {
+                CircuitBreaker
+                        .create("httpclient", vertx, circuitBreakerOptionsOf(
+                                maxFailures = 5,
+                                maxRetries = 5,
+                                timeout = 10_000,
+                                resetTimeout = 5000
+                        ))
+            }
 
     /**
      * 已爬取的的请求
@@ -228,13 +226,6 @@ class VertxScrapyVerticle(
             }
             if (doneRequest.contains(req)) continue
             doneRequest.add(req)
-            val circuitBreaker = CircuitBreaker
-                    .create("httpclient", vertx, circuitBreakerOptionsOf(
-                            maxFailures = 5,
-                            maxRetries = 5,
-                            timeout = 10_000,
-                            resetTimeout = 5000
-                    ))
 
 
             val response = circuitBreaker.executeCommandAwait<HttpResponse<Buffer>> {
@@ -257,21 +248,24 @@ class VertxScrapyVerticle(
                 continue
             }
             doneContentHash.add(hashCode)
-            val sequence: Sequence<CrawlData> = vertx.executeBlockingAwait<Sequence<CrawlData>>({ (req.paeser)(response, req) }, true)!!
+            val sequence: Sequence<CrawlData> = (req.parser)(response, req)
 
-            sequence.forEach {
-                when (it) {
+            sequence.forEach { crawlData ->
+                when (crawlData) {
                     is Item -> {
-                        if (!done.contains(it.hashCode())) {
-                            done.add(it.hashCode())
-                            options.pipeline.process(it)
+                        if (!done.contains(crawlData.hashCode())) {
+                            done.add(crawlData.hashCode())
+                            options.pipeline.process(crawlData)
                         }
                     }
                     is Request -> {
-                        it.takeUnless(doneRequest::contains)?.let(requests::push)
+                        crawlData.takeUnless(doneRequest::contains)?.let { requests.push(it) }
                     }
                 }
             }
+
+
+
 
             if (options.delayMs > 0)
                 delay(options.delayMs)
@@ -279,6 +273,11 @@ class VertxScrapyVerticle(
     }
 
     override suspend fun start() {
+
+        startURL.forEach {
+            requests.push(it)
+        }
+
         webClient = WebClient.create(vertx, webClientOptionsOf(
                 keepAlive = false,
                 tcpFastOpen = true,
@@ -289,6 +288,7 @@ class VertxScrapyVerticle(
         options.pipeline.open(vertx)
 
         repeat(options.concurrentSize) {
+
             launch {
                 runSpider()
             }

@@ -1,13 +1,10 @@
 package com.tencent.careers
 
 import cn.mmooo.vertx.scrapy.*
-import io.vertx.core.Vertx
 import io.vertx.core.buffer.Buffer
-import io.vertx.core.file.AsyncFile
 import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
 import io.vertx.ext.web.client.HttpResponse
-import io.vertx.kotlin.core.file.openOptionsOf
 import java.net.URL
 
 fun main() {
@@ -24,7 +21,7 @@ fun main() {
             links.map {
                 Request(
                         URL(it),
-                        paeser = ::parseBody  // 回调函数
+                        parser = ::parseBody  // 回调函数
                 )
             }.toTypedArray()
     // 一次放进100个 Request 对象

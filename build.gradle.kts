@@ -1,11 +1,13 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    kotlin("jvm") version "1.3.40"
+    kotlin("jvm") version "1.3.50"
+    maven
 }
 group = "cn.mmooo"
 version = "0.1.0"
-val vertx_version = "3.7.1"
+
+val vertx_version = "3.8.1"
 val logback_version = "1.2.3"
 val jsoup_version = "1.12.1"
 dependencies {
