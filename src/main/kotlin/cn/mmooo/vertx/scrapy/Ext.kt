@@ -1,9 +1,8 @@
 package cn.mmooo.vertx.scrapy
 
-import io.vertx.core.Vertx
-import io.vertx.core.buffer.Buffer
-import io.vertx.core.file.AsyncFile
-import io.vertx.kotlin.core.file.openOptionsOf
+import io.vertx.core.*
+import io.vertx.core.buffer.*
+import io.vertx.core.file.*
 
 
 class Json2FilePipeline(private val fileName: String) : Pipeline {
@@ -22,7 +21,7 @@ class Json2FilePipeline(private val fileName: String) : Pipeline {
     }
 
     override fun open(vertx: Vertx) {
-        file = vertx.fileSystem().openBlocking(fileName, openOptionsOf(write = true, sync = true))
+        file = vertx.fileSystem().openBlocking(fileName, OpenOptions().setWrite(true).setSync(true))
         file.write(Buffer.buffer("[\n]"))
     }
 

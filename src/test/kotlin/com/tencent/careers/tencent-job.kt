@@ -1,11 +1,10 @@
 package com.tencent.careers
 
 import cn.mmooo.vertx.scrapy.*
-import io.vertx.core.buffer.Buffer
-import io.vertx.core.json.JsonArray
-import io.vertx.core.json.JsonObject
-import io.vertx.ext.web.client.HttpResponse
-import java.net.URL
+import io.vertx.core.buffer.*
+import io.vertx.core.json.*
+import io.vertx.ext.web.client.*
+import java.net.*
 
 fun main() {
     val links =

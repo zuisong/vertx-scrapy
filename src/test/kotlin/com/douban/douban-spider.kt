@@ -1,11 +1,11 @@
 package com.douban
 
 import cn.mmooo.vertx.scrapy.*
-import io.vertx.core.buffer.Buffer
-import io.vertx.ext.web.client.HttpResponse
-import io.vertx.kotlin.core.json.jsonObjectOf
-import org.jsoup.Jsoup
-import java.net.URL
+import io.vertx.core.buffer.*
+import io.vertx.core.json.*
+import io.vertx.ext.web.client.*
+import org.jsoup.*
+import java.net.*
 
 fun main() {
     // 初始一个 request 对象
@@ -21,6 +21,7 @@ fun main() {
     deployVertxSpider(httpRequest, options = vertxSpiderOptions)
 
 }
+
 // 爬下来的页面响应
 fun parseListPage(resp: HttpResponse<Buffer>, request: Request): Sequence<CrawlData> = sequence {
     logger.debug("这里解析页面")
@@ -28,7 +29,7 @@ fun parseListPage(resp: HttpResponse<Buffer>, request: Request): Sequence<CrawlD
     val document = Jsoup.parse(html)
     document.select("div.item")
             .map { it.text().trim() }
-            .map { Item(jsonObjectOf("item" to it)) }
+            .map { Item(JsonObject().put("item", it)) }
             .forEach {
                 // yield Item 表示数据
                 println(it)

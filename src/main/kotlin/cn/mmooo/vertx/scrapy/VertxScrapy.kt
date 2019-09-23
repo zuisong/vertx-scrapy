@@ -1,29 +1,19 @@
 package cn.mmooo.vertx.scrapy
 
-import io.vertx.circuitbreaker.CircuitBreaker
-import io.vertx.core.Vertx
-import io.vertx.core.buffer.Buffer
-import io.vertx.core.http.HttpMethod
-import io.vertx.core.impl.ConcurrentHashSet
-import io.vertx.core.json.JsonObject
-import io.vertx.ext.web.client.HttpResponse
-import io.vertx.ext.web.client.WebClient
-import io.vertx.kotlin.circuitbreaker.circuitBreakerOptionsOf
-import io.vertx.kotlin.circuitbreaker.executeCommandAwait
-import io.vertx.kotlin.core.deploymentOptionsOf
-import io.vertx.kotlin.core.json.jsonObjectOf
-import io.vertx.kotlin.coroutines.CoroutineVerticle
-import io.vertx.kotlin.ext.web.client.sendBufferAwait
-import io.vertx.kotlin.ext.web.client.webClientOptionsOf
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
-import java.lang.invoke.MethodHandles
-import java.net.URL
+import io.vertx.circuitbreaker.*
+import io.vertx.core.*
+import io.vertx.core.buffer.*
+import io.vertx.core.http.*
+import io.vertx.core.impl.*
+import io.vertx.core.json.*
+import io.vertx.ext.web.client.*
+import io.vertx.kotlin.coroutines.*
+import kotlinx.coroutines.*
+import org.slf4j.*
+import java.lang.invoke.*
+import java.net.*
 import java.util.*
-import java.util.concurrent.ConcurrentLinkedDeque
-import java.util.concurrent.TimeUnit
+import java.util.concurrent.*
 
 val logger: Logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass())
 
@@ -104,9 +94,8 @@ fun deployVertxSpider(
         options: VertxSpiderOptions = VertxSpiderOptions()) {
     val vertx = Vertx.vertx()
 
-    vertx.deployVerticle(VertxScrapyVerticle(req.toList(), options), deploymentOptionsOf(
-            worker = options.isWorkerMode
-    ))
+    vertx.deployVerticle(VertxScrapyVerticle(req.toList(), options), DeploymentOptions()
+            .setWorker(options.isWorkerMode))
 }
 
 typealias Parser = (resp: HttpResponse<Buffer>, req: Request) -> Sequence<CrawlData>
@@ -194,12 +183,14 @@ class VertxScrapyVerticle(
     private val circuitBreaker: CircuitBreaker
             by lazy {
                 CircuitBreaker
-                        .create("httpclient", vertx, circuitBreakerOptionsOf(
-                                maxFailures = 5,
-                                maxRetries = 5,
-                                timeout = 10_000,
-                                resetTimeout = 5000
-                        ))
+                        .create("httpclient", vertx, with(CircuitBreakerOptions()) {
+                            maxFailures = 5
+                            maxRetries = 5
+                            timeout = 10_000
+                            resetTimeout = 5000
+                            this
+                        }
+                        )
             }
 
     /**
@@ -228,7 +219,7 @@ class VertxScrapyVerticle(
             doneRequest.add(req)
 
 
-            val response = circuitBreaker.executeCommandAwait<HttpResponse<Buffer>> {
+            val response = circuitBreaker.execute<HttpResponse<Buffer>> {
                 launch {
                     val response = webClient.requestAbs(req.method, req.url.toString())
                             .apply {
@@ -237,10 +228,10 @@ class VertxScrapyVerticle(
                                 }
                             }
                             .timeout(0)
-                            .sendBufferAwait(Buffer.buffer(req.body))
+                            .sendBuffer(Buffer.buffer(req.body)).await()
                     it.complete(response)
                 }
-            }
+            }.await()
             val body = response.bodyAsString()
             val hashCode = body.hashCode()
             logger.debug("url-> {}, hashCode -> {}", req.url, hashCode)
@@ -278,13 +269,14 @@ class VertxScrapyVerticle(
             requests.push(it)
         }
 
-        webClient = WebClient.create(vertx, webClientOptionsOf(
-                keepAlive = false,
-                tcpFastOpen = true,
-                tcpKeepAlive = false,
-                connectTimeout = 0,
-                reuseAddress = true
-        ))
+        webClient = WebClient.create(vertx, with(WebClientOptions()) {
+            isKeepAlive = false
+            isTcpFastOpen = true
+            isTcpKeepAlive = false
+            connectTimeout = 0
+            isReuseAddress = true
+            this
+        })
         options.pipeline.open(vertx)
 
         repeat(options.concurrentSize) {
@@ -305,6 +297,6 @@ class VertxScrapyVerticle(
 
 private fun defaultParser(resp: HttpResponse<Buffer>, req: Request): Sequence<CrawlData> = sequence {
     logger.warn("没有指定任何解析器，使用系统默认解析器")
-    yield(Item(jsonObjectOf("body" to resp.bodyAsString())))
+    yield(Item(JsonObject(mapOf("body" to resp.bodyAsString()))))
 }
 
