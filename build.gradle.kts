@@ -1,3 +1,5 @@
+@file:Suppress("PropertyName")
+
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
@@ -7,7 +9,7 @@ plugins {
 group = "cn.mmooo"
 version = "0.1.0"
 
-val vertx_version ="4.0.0-milestone3"
+val vertx_version = "4.0.0-milestone3"
 val logback_version = "1.2.3"
 val jsoup_version = "1.12.1"
 dependencies {
