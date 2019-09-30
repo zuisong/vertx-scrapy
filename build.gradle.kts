@@ -4,14 +4,17 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     kotlin("jvm") version "1.3.50"
+    id("io.freefair.github.package-registry-maven-publish").version("4.1.1")
     maven
 }
-group = "cn.mmooo"
-version = "0.1.0"
 
 val vertx_version = "4.0.0-milestone3"
 val logback_version = "1.2.3"
 val jsoup_version = "1.12.1"
+
+group = "cn.mmooo"
+version = vertx_version
+
 dependencies {
     implementation(kotlin("stdlib-jdk8"))
     compile("io.vertx:vertx-core:$vertx_version")
@@ -35,3 +38,18 @@ val compileTestKotlin: KotlinCompile by tasks
 compileTestKotlin.kotlinOptions {
     jvmTarget = "1.8"
 }
+
+
+github {
+    username.set(project.properties["githubUsername"]?.toString())
+    token.set(project.properties["githubToken"]?.toString())
+}
+
+publishing {
+    publications {
+        create<MavenPublication>("main") {
+            from(components["java"])
+        }
+    }
+}
+
