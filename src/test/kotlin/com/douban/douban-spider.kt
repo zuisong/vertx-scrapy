@@ -14,8 +14,8 @@ fun main() {
             parser = ::parseListPage //parser 回调
     )
     val vertxSpiderOptions = VertxSpiderOptions(
-            concurrentSize = 1, // 并发数 5
-            delayMs = 10, // 每个并发爬完一个页面延时 1s
+            concurrentSize = 5, // 并发数 5
+            delayMs = 1000, // 每个并发爬完一个页面延时 1s
             pipeline = Json2FilePipeline("douban.json")
     )
     deployVertxSpider(httpRequest, options = vertxSpiderOptions)

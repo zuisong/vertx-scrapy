@@ -164,7 +164,9 @@ data class Request(
         /**
          * 解析器, 解析 response 时用
          */
-        val parser: Parser = ::defaultParser
+        val parser: Parser = ::defaultParser,
+
+        val shutDownTimeOut: Int = Int.MAX_VALUE
 ) : CrawlData()
 
 class VertxScrapyVerticle(
@@ -206,11 +208,20 @@ class VertxScrapyVerticle(
      */
     private val done = ConcurrentHashSet<Int>()
 
+    private var lastCrawledTime = System.currentTimeMillis()
+
     lateinit var webClient: WebClient
     private suspend fun runSpider() {
         while (true) {
             val req: Request? = requests.pop()
             if (req == null) {
+
+                if (System.currentTimeMillis() - lastCrawledTime > 5 * 5000) {
+                    logger.warn("all requests has been crawled! exit!")
+                    stop()
+                    lastCrawledTime = System.currentTimeMillis()
+                }
+
                 logger.warn("no more Request to crawl !")
                 delay(TimeUnit.SECONDS.toMillis(5))
                 continue
@@ -232,6 +243,7 @@ class VertxScrapyVerticle(
                     it.complete(response)
                 }
             }.await()
+            lastCrawledTime = System.currentTimeMillis()
             val body = response.bodyAsString()
             val hashCode = body.hashCode()
             logger.debug("url-> {}, hashCode -> {}", req.url, hashCode)
@@ -290,7 +302,7 @@ class VertxScrapyVerticle(
 
     override suspend fun stop() {
         options.pipeline.close()
-        super.stop()
+        vertx.undeploy(deploymentID)
     }
 
 }

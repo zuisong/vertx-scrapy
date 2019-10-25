@@ -14,7 +14,7 @@ fun main() {
                     &pageSize=100
                     &language=zh-cn
                     &area=cn
-                    """.replace(Regex("\\s+"), "")
+                    """.replace("\\s+".let(::Regex), "")
             }
     val requests =
             links.map {
@@ -35,7 +35,8 @@ fun main() {
 
 fun parseBody(resp: HttpResponse<Buffer>, req: Request) = sequence<CrawlData> {
     // 响应体是个 json
-    val jobs: JsonArray? = resp.bodyAsJsonObject().getJsonObject("Data").getJsonArray("Posts")
+    val jobs: JsonArray? = resp
+            .bodyAsJsonObject().getJsonObject("Data").getJsonArray("Posts")
     jobs?.forEach {
         if (it is JsonObject) {
             yield(Item(it)) // 这里返回item 会被设置好的 Json2FilePipeline 处理

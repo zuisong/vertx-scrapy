@@ -3,16 +3,19 @@ package cn.mmooo.vertx.scrapy
 import io.vertx.core.*
 import io.vertx.core.buffer.*
 import io.vertx.core.file.*
+import io.vertx.kotlin.coroutines.*
+import kotlinx.coroutines.sync.*
 
 
 class Json2FilePipeline(private val fileName: String) : Pipeline {
 
     private lateinit var file: AsyncFile
 
+    private val mutex = Mutex()
     override suspend fun process(item: Item) {
-        synchronized(this) {
+        mutex.withLock {
             file.writePos -= 1
-            file.write(item.data.toBuffer().appendString(",\n]"))
+            file.write(item.data.toBuffer().appendString(",\n]")).await()
         }
     }
 
