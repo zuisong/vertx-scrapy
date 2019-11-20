@@ -9,7 +9,7 @@ plugins {
 
 
 group = "cn.mmooo"
-version = "4.0.0-milestone3"
+version =  "4.0.0-milestone3"
 
 val vertx_version = version
 val logback_version = "1.2.3"
@@ -41,30 +41,5 @@ compileKotlin.kotlinOptions {
 val compileTestKotlin: KotlinCompile by tasks
 compileTestKotlin.kotlinOptions {
     jvmTarget = "1.8"
-}
-
-
-tasks.named<Upload>("uploadArchives") {
-    val codingArtifactsRepoUrl: String by project
-    val codingArtifactsGradleUsername: String by project
-    val codingArtifactsGradlePassword: String by project
-
-    repositories {
-        withConvention(MavenRepositoryHandlerConvention::class) {
-            mavenDeployer {
-                withGroovyBuilder {
-                    "repository"("url" to codingArtifactsRepoUrl) {
-                        "authentication"("userName" to codingArtifactsGradleUsername, "password" to codingArtifactsGradlePassword)
-                    }
-                }
-
-                pom {
-                    artifactId = project.name
-                    groupId = project.group.toString()
-                    version = project.version.toString()
-                }
-            }
-        }
-    }
 }
 
