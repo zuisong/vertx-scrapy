@@ -15,7 +15,8 @@ import java.net.*
 import java.util.*
 import java.util.concurrent.*
 
-val logger: Logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass())
+val logger: Logger
+    inline get() =  LoggerFactory.getLogger(MethodHandles.lookup().lookupClass())
 
 /**
  * @author zuisong
