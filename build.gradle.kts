@@ -25,6 +25,7 @@ dependencies {
     api("ch.qos.logback:logback-classic:$logback_version")
 
     testImplementation("org.jsoup:jsoup:$jsoup_version")
+    api("com.google.code.gson:gson:2.8.6")
 }
 
 repositories {
