@@ -2,11 +2,9 @@ package com.huazhu
 
 
 import cn.mmooo.vertx.scrapy.*
-import com.fasterxml.jackson.databind.node.*
 import io.vertx.core.buffer.*
 import io.vertx.core.http.*
 import io.vertx.core.json.*
-import io.vertx.core.json.jackson.*
 import io.vertx.ext.web.client.*
 import java.net.*
 
@@ -33,14 +31,11 @@ fun main() {
 
 // 爬下来的页面响应
 fun parseListPage(resp: HttpResponse<Buffer>, request: Request): Sequence<CrawlData> = sequence {
-    val body = resp.bodyAsString(Charsets.UTF_8.name())
-    val jsonObject = DatabindCodec.mapper().readTree(body) as ObjectNode
-
-    println(jsonObject)
-    val jsonArray = jsonObject.withArray("goodsVOList")
+    val jsonObject = resp.bodyAsJsonObject()
     logger.info(request.body)
-    jsonArray.toList()
-            .filterIsInstance<ObjectNode>()
+    val jsonArray = jsonObject.getJsonArray("goodsVOList")
+    jsonArray
+            .filterIsInstance<JsonObject>()
             .forEach {
                 logger.info("{}", it)
                 yield(Item(JsonObject(it.toString())))
