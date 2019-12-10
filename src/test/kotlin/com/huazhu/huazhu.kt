@@ -2,9 +2,11 @@ package com.huazhu
 
 
 import cn.mmooo.vertx.scrapy.*
-import com.google.gson.*
+import com.fasterxml.jackson.databind.node.*
 import io.vertx.core.buffer.*
 import io.vertx.core.http.*
+import io.vertx.core.json.*
+import io.vertx.core.json.jackson.*
 import io.vertx.ext.web.client.*
 import java.net.*
 
@@ -22,7 +24,7 @@ fun main() {
                 )
             }
     val vertxSpiderOptions = VertxSpiderOptions(
-            concurrentSize = 5, // 并发数 5
+            concurrentSize = 50, // 并发数 5
             delayMs = 0, // 每个并发爬完一个页面延时 1s
             pipeline = Json2FilePipeline("huazhu.json")
     )
@@ -32,15 +34,16 @@ fun main() {
 // 爬下来的页面响应
 fun parseListPage(resp: HttpResponse<Buffer>, request: Request): Sequence<CrawlData> = sequence {
     val body = resp.bodyAsString(Charsets.UTF_8.name())
-    val jsonObject = JsonParser.parseString(body).asJsonObject
+    val jsonObject = DatabindCodec.mapper().readTree(body) as ObjectNode
+
     println(jsonObject)
-    val jsonArray = jsonObject.getAsJsonArray("goodsVOList")
-    println(request.body)
+    val jsonArray = jsonObject.withArray("goodsVOList")
+    logger.info(request.body)
     jsonArray.toList()
-            .filterIsInstance<JsonObject>()
+            .filterIsInstance<ObjectNode>()
             .forEach {
-                println(it)
-                yield(Item(io.vertx.core.json.JsonObject(it.toString())))
+                logger.info("{}", it)
+                yield(Item(JsonObject(it.toString())))
             }
 }
 
