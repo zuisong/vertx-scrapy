@@ -25,7 +25,7 @@ fun main() {
 // 爬下来的页面响应
 fun parseListPage(resp: HttpResponse<Buffer>, request: Request): Sequence<CrawlData> = sequence {
     logger.debug("这里解析页面")
-    val html = resp.bodyAsString(request.charset)
+    val html = resp.bodyAsString(request.charset.name())
     val document = Jsoup.parse(html)
     document.select("div.item")
             .map { it.text().trim() }

@@ -38,7 +38,7 @@ fun parseListPage(resp: HttpResponse<Buffer>, request: Request): Sequence<CrawlD
             .filterIsInstance<JsonObject>()
             .forEach {
                 logger.info("{}", it)
-                yield(Item(JsonObject(it.toString())))
+                yield(Item(it))
             }
 }
 

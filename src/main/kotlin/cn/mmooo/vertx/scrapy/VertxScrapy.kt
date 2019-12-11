@@ -12,11 +12,12 @@ import kotlinx.coroutines.*
 import org.slf4j.*
 import java.lang.invoke.*
 import java.net.*
+import java.nio.charset.*
 import java.util.*
 import java.util.concurrent.*
 
 val logger: Logger
-    inline get() =  LoggerFactory.getLogger(MethodHandles.lookup().lookupClass())
+    inline get() = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass())
 
 /**
  * @author zuisong
@@ -112,7 +113,8 @@ fun fixupRelative(baseURL: String, relative: String): String {
         val stripTo = workingRelative[0]
         var stripToLoc = baseURL.indexOf(stripTo)
         if (0 > stripToLoc && ';' == stripTo) {
-            stripToLoc = baseURL.indexOf('?')  // if relative and has a ';' but the baseURL does not, then we will strip to ?
+            // if relative and has a ';' but the baseURL does not, then we will strip to ?
+            stripToLoc = baseURL.indexOf('?')
             if (0 > stripToLoc) {
                 stripToLoc = baseURL.length
             }
@@ -121,7 +123,8 @@ fun fixupRelative(baseURL: String, relative: String): String {
             stripToLoc = baseURL.length
         }
         val startLoc = baseURL.lastIndexOf('/', stripToLoc) + 1
-        if (startLoc in 1..stripToLoc) {  // only enter if we have good values, otherwise give up and hope for the best
+        // only enter if we have good values, otherwise give up and hope for the best
+        if (startLoc in 1..stripToLoc) {
             val prefix = baseURL.substring(startLoc, stripToLoc)
             workingRelative = prefix + workingRelative
         }
@@ -161,7 +164,7 @@ data class Request(
         /**
          * 解析body时的编码
          */
-        val charset: String = Charsets.UTF_8.name(),
+        val charset: Charset = Charsets.UTF_8,
         /**
          * 解析器, 解析 response 时用
          */

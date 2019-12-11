@@ -36,11 +36,14 @@ fun main() {
 fun parseBody(resp: HttpResponse<Buffer>, req: Request) = sequence<CrawlData> {
     // 响应体是个 json
     val jobs: JsonArray? = resp
-            .bodyAsJsonObject().getJsonObject("Data").getJsonArray("Posts")
-    jobs?.forEach {
-        if (it is JsonObject) {
-            yield(Item(it)) // 这里返回item 会被设置好的 Json2FilePipeline 处理
-        }
-    }
+            .bodyAsJsonObject()
+            .getJsonObject("Data")
+            .getJsonArray("Posts")
+
+    jobs
+            ?.filterIsInstance<JsonObject>()
+            ?.forEach {
+                yield(Item(it)) // 这里返回item 会被设置好的 Json2FilePipeline 处理
+            }
 
 }
