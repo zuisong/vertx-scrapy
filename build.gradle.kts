@@ -9,7 +9,7 @@ plugins {
 
 
 group = "cn.mmooo"
-version = "4.0.0-milestone3"
+version = "4.0.0-milestone4"
 
 val vertx_version = version
 val logback_version = "1.2.3"
