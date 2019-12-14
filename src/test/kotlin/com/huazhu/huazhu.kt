@@ -2,13 +2,19 @@ package com.huazhu
 
 import cn.mmooo.vertx.scrapy.*
 import com.fasterxml.jackson.annotation.*
+import com.fasterxml.jackson.databind.*
 import com.fasterxml.jackson.module.kotlin.*
 import io.vertx.core.buffer.*
 import io.vertx.core.http.*
 import io.vertx.core.json.*
-import io.vertx.core.json.jackson.*
 import io.vertx.ext.web.client.*
 import java.net.*
+
+
+private val mapper: ObjectMapper =
+        jacksonObjectMapper()
+                .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+
 
 fun main() {
     // 初始一个 request 对象
@@ -32,11 +38,7 @@ fun main() {
 
 // 爬下来的页面响应
 fun parseListPage(resp: HttpResponse<Buffer>, request: Request): Sequence<CrawlData> = sequence {
-
-
-    DatabindCodec
-            .mapper()
-            .readValue<HuaPage>(resp.bodyAsString())
+    mapper.readValue<HuaPage>(resp.bodyAsString())
             .goodsVOList
             ?.forEach {
                 logger.info("{}, {}", request.body, it)

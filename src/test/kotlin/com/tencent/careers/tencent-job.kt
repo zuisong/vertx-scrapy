@@ -2,12 +2,16 @@ package com.tencent.careers
 
 import cn.mmooo.vertx.scrapy.*
 import com.fasterxml.jackson.annotation.*
+import com.fasterxml.jackson.databind.*
 import com.fasterxml.jackson.module.kotlin.*
 import io.vertx.core.buffer.*
 import io.vertx.core.json.*
-import io.vertx.core.json.jackson.*
 import io.vertx.ext.web.client.*
 import java.net.*
+
+private val mapper: ObjectMapper =
+        jacksonObjectMapper()
+                .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
 
 fun main() {
     val links =
@@ -39,8 +43,7 @@ fun main() {
 fun parseBody(resp: HttpResponse<Buffer>, req: Request) = sequence<CrawlData> {
     // 响应体是个 json
     println(resp.bodyAsJsonObject())
-    val jobs = DatabindCodec
-            .mapper()
+    val jobs = mapper
             .readValue<HRData>(resp.bodyAsString())
             .data?.posts
     jobs?.forEach {
