@@ -9,3 +9,6 @@ build
 .*
 !.gitignore
 !.github
+
+/*.json
+target

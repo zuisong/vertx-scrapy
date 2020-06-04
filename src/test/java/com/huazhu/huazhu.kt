@@ -61,13 +61,13 @@ data class ConditionVOList(
 data class GoodsVOList(
         val cost: Double? = null,
 
-        @get:JsonProperty("goodsId") @field:JsonProperty("goodsId")
+        @JsonProperty("goodsId")
         val goodsID: Long? = null,
 
         val goodsName: String? = null,
         val goodsNo: String? = null,
 
-        @get:JsonProperty("goodsPicUrl") @field:JsonProperty("goodsPicUrl")
+        @JsonProperty("goodsPicUrl")
         val goodsPicURL: String? = null,
 
         val goodsSn: String? = null,
@@ -77,16 +77,16 @@ data class GoodsVOList(
         val sort: Long? = null,
         val status: String? = null,
 
-        @get:JsonProperty("storeId") @field:JsonProperty("storeId")
+        @JsonProperty("storeId")
         val storeID: Long? = null,
 
         val storeName: String? = null,
 
-        @get:JsonProperty("topOrgId") @field:JsonProperty("topOrgId")
+        @JsonProperty("topOrgId")
         val topOrgID: Long? = null,
 
         val unit: String? = null,
 
-        @get:JsonProperty("storeCateId") @field:JsonProperty("storeCateId")
+        @JsonProperty("storeCateId")
         val storeCateID: Long? = null
 )

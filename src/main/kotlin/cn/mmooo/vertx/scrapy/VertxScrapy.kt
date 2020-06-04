@@ -3,6 +3,7 @@ package cn.mmooo.vertx.scrapy
 import io.vertx.circuitbreaker.*
 import io.vertx.core.*
 import io.vertx.core.buffer.*
+import io.vertx.core.dns.*
 import io.vertx.core.http.*
 import io.vertx.core.impl.*
 import io.vertx.core.json.*
@@ -94,10 +95,17 @@ class PrintPipeline : Pipeline {
 fun deployVertxSpider(
         vararg req: Request,
         options: VertxSpiderOptions = VertxSpiderOptions()) {
-    val vertx = Vertx.vertx()
+    val vertx = Vertx.vertx(VertxOptions().apply {
+        addressResolverOptions = AddressResolverOptions().apply {
+            servers = listOf("114.114.114.114")
+        }
+    })
 
-    vertx.deployVerticle(VertxScrapyVerticle(req.toList(), options), DeploymentOptions()
-            .setWorker(options.isWorkerMode))
+
+    vertx.deployVerticle(VertxScrapyVerticle(req.toList(), options),
+            DeploymentOptions().apply {
+                isWorker = options.isWorkerMode
+            })
 }
 
 typealias Parser = (resp: HttpResponse<Buffer>, req: Request) -> Sequence<CrawlData>
@@ -195,18 +203,19 @@ class VertxScrapyVerticle(
                             timeout = 10_000
                             resetTimeout = 5000
                             this
-                        }
-                        )
+                        })
             }
 
     /**
      * 已爬取的的请求
      */
     private val doneRequest: DuplicationPredictor<Request> = SetDuplicationPredictor()
+
     /**
      * 已经爬取的响应内容的 hashCode
      */
     private val doneContentHash: DuplicationPredictor<Int> = SetDuplicationPredictor()
+
     /**
      * 已经爬取的 item 的 hashCode
      */
@@ -214,7 +223,8 @@ class VertxScrapyVerticle(
 
     private var lastCrawledTime = System.currentTimeMillis()
 
-    lateinit var webClient: WebClient
+    private lateinit var webClient: WebClient
+
     private suspend fun runSpider() {
         while (true) {
             val req: Request? = requests.pop()
@@ -223,14 +233,16 @@ class VertxScrapyVerticle(
                 if (System.currentTimeMillis() - lastCrawledTime > 5 * 5000) {
                     logger.warn("all requests has been crawled! exit!")
                     stop()
-                    lastCrawledTime = System.currentTimeMillis()
                 }
 
                 logger.warn("no more Request to crawl !")
                 delay(TimeUnit.SECONDS.toMillis(5))
                 continue
             }
-            if (doneRequest.contains(req)) continue
+
+            if (doneRequest.contains(req)) {
+                continue
+            }
             doneRequest.add(req)
 
 
@@ -243,7 +255,8 @@ class VertxScrapyVerticle(
                                 }
                             }
                             .timeout(0)
-                            .sendBuffer(Buffer.buffer(req.body)).await()
+                            .sendBuffer(Buffer.buffer(req.body))
+                            .await()
                     it.complete(response)
                 }
             }.await()
@@ -272,8 +285,6 @@ class VertxScrapyVerticle(
             }
 
 
-
-
             if (options.delayMs > 0)
                 delay(options.delayMs)
         }
@@ -285,13 +296,12 @@ class VertxScrapyVerticle(
             requests.push(it)
         }
 
-        webClient = WebClient.create(vertx, with(WebClientOptions()) {
+        webClient = WebClient.create(vertx, WebClientOptions().apply {
             isKeepAlive = false
             isTcpFastOpen = true
             isTcpKeepAlive = false
             connectTimeout = 0
             isReuseAddress = true
-            this
         })
         options.pipeline.open(vertx)
 

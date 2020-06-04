@@ -55,65 +55,65 @@ fun parseBody(resp: HttpResponse<Buffer>, req: Request) = sequence<CrawlData> {
 
 
 data class HRData(
-        @get:JsonProperty("Code") @field:JsonProperty("Code")
+        @JsonProperty("Code")
         val code: Long? = null,
 
-        @get:JsonProperty("Data") @field:JsonProperty("Data")
+        @JsonProperty("Data")
         val data: Data? = null
 )
 
 data class Data(
-        @get:JsonProperty("Count") @field:JsonProperty("Count")
+        @JsonProperty("Count")
         val count: Long? = null,
 
-        @get:JsonProperty("Posts") @field:JsonProperty("Posts")
+        @JsonProperty("Posts")
         val posts: List<Post>? = null
 )
 
 data class Post(
-        @get:JsonProperty("Id") @field:JsonProperty("Id")
+        @JsonProperty("Id")
         val id: Long? = null,
 
-        @get:JsonProperty("PostId") @field:JsonProperty("PostId")
+        @JsonProperty("PostId")
         val postID: String? = null,
 
-        @get:JsonProperty("RecruitPostId") @field:JsonProperty("RecruitPostId")
+        @JsonProperty("RecruitPostId")
         val recruitPostID: Long? = null,
 
-        @get:JsonProperty("RecruitPostName") @field:JsonProperty("RecruitPostName")
+        @JsonProperty("RecruitPostName")
         val recruitPostName: String? = null,
 
-        @get:JsonProperty("CountryName") @field:JsonProperty("CountryName")
+        @JsonProperty("CountryName")
         val countryName: String? = null,
 
-        @get:JsonProperty("LocationName") @field:JsonProperty("LocationName")
+        @JsonProperty("LocationName")
         val locationName: String? = null,
 
-        @get:JsonProperty("BGName") @field:JsonProperty("BGName")
+        @JsonProperty("BGName")
         val bgName: String? = null,
 
-        @get:JsonProperty("ProductName") @field:JsonProperty("ProductName")
+        @JsonProperty("ProductName")
         val productName: String? = null,
 
-        @get:JsonProperty("CategoryName") @field:JsonProperty("CategoryName")
+        @JsonProperty("CategoryName")
         val categoryName: String? = null,
 
-        @get:JsonProperty("Responsibility") @field:JsonProperty("Responsibility")
+        @JsonProperty("Responsibility")
         val responsibility: String? = null,
 
-        @get:JsonProperty("LastUpdateTime") @field:JsonProperty("LastUpdateTime")
+        @JsonProperty("LastUpdateTime")
         val lastUpdateTime: String? = null,
 
-        @get:JsonProperty("PostURL") @field:JsonProperty("PostURL")
+        @JsonProperty("PostURL")
         val postURL: String? = null,
 
-        @get:JsonProperty("SourceID") @field:JsonProperty("SourceID")
+        @JsonProperty("SourceID")
         val sourceID: Long? = null,
 
-        @get:JsonProperty("IsCollect") @field:JsonProperty("IsCollect")
+        @JsonProperty("IsCollect")
         val isCollect: Boolean? = null,
 
-        @get:JsonProperty("IsValid") @field:JsonProperty("IsValid")
+        @JsonProperty("IsValid")
         val isValid: Boolean? = null
 )
 
