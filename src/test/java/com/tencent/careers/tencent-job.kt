@@ -6,12 +6,16 @@ import com.fasterxml.jackson.databind.*
 import com.fasterxml.jackson.module.kotlin.*
 import io.vertx.core.buffer.*
 import io.vertx.core.json.*
+import io.vertx.core.json.jackson.*
 import io.vertx.ext.web.client.*
 import java.net.*
 
 private val mapper: ObjectMapper =
-        jacksonObjectMapper()
+        DatabindCodec
+                .mapper()
+                .registerKotlinModule()
                 .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+
 
 fun main() {
     val links =

@@ -1,76 +1,89 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>cn.mmooo</groupId>
     <artifactId>vertx-scrapy</artifactId>
     <version>4.0.0-milestone5</version>
-
     <properties>
         <kotlin.version>1.3.72</kotlin.version>
+        <jackson-bom.version>2.11.0</jackson-bom.version>
+        <spock.version>2.0-M3-groovy-3.0</spock.version>
     </properties>
 
+    <repositories>
+        <repository>
+            <id>huawei</id>
+            <url>https://mirrors.huaweicloud.com/repository/maven/</url>
+        </repository>
+    </repositories>
+    <pluginRepositories>
+        <pluginRepository>
+            <id>huawei</id>
+            <url>https://mirrors.huaweicloud.com/repository/maven/</url>
+        </pluginRepository>
+    </pluginRepositories>
     <dependencyManagement>
         <dependencies>
             <dependency>
                 <groupId>org.jetbrains.kotlin</groupId>
                 <artifactId>kotlin-bom</artifactId>
-                <version>1.3.71</version>
+                <version>${kotlin.version}</version>
                 <scope>import</scope>
                 <type>pom</type>
             </dependency>
             <dependency>
                 <groupId>com.fasterxml.jackson</groupId>
                 <artifactId>jackson-bom</artifactId>
-                <version>2.10.1</version>
+                <version>${jackson-bom.version}</version>
+                <scope>import</scope>
+                <type>pom</type>
+            </dependency>
+            <dependency>
+                <groupId>io.vertx</groupId>
+                <artifactId>vertx-dependencies</artifactId>
+                <version>${project.version}</version>
                 <scope>import</scope>
                 <type>pom</type>
             </dependency>
 
             <dependency>
-                <groupId>io.vertx</groupId>
-                <artifactId>vertx-dependencies</artifactId>
-                <version>4.0.0-milestone5</version>
-                <scope>import</scope>
+                <groupId>org.spockframework</groupId>
+                <artifactId>spock-bom</artifactId>
+                <version>${spock.version}</version>
                 <type>pom</type>
+                <scope>import</scope>
             </dependency>
 
         </dependencies>
     </dependencyManagement>
-
     <dependencies>
-
         <dependency>
             <groupId>io.vertx</groupId>
             <artifactId>vertx-core</artifactId>
-
         </dependency>
         <dependency>
             <groupId>io.vertx</groupId>
             <artifactId>vertx-web</artifactId>
-
         </dependency>
         <dependency>
             <groupId>io.vertx</groupId>
             <artifactId>vertx-web-client</artifactId>
-
         </dependency>
         <dependency>
             <groupId>io.vertx</groupId>
             <artifactId>vertx-circuit-breaker</artifactId>
-
         </dependency>
         <dependency>
             <groupId>io.vertx</groupId>
             <artifactId>vertx-lang-kotlin-coroutines</artifactId>
-
         </dependency>
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
             <version>1.2.3</version>
             <scope>compile</scope>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.module</groupId>
@@ -80,7 +93,7 @@
         <dependency>
             <groupId>org.jsoup</groupId>
             <artifactId>jsoup</artifactId>
-            <version>1.12.1</version>
+            <version>1.13.1</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -88,16 +101,81 @@
             <artifactId>kotlin-stdlib-jdk8</artifactId>
             <version>${kotlin.version}</version>
         </dependency>
+
         <dependency>
-            <groupId>org.jetbrains.kotlin</groupId>
-            <artifactId>kotlin-test</artifactId>
-            <version>${kotlin.version}</version>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-engine</artifactId>
+            <version>5.6.2</version>
             <scope>test</scope>
         </dependency>
-    </dependencies>
 
+
+        <dependency>
+            <groupId>org.spockframework</groupId>
+            <artifactId>spock-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.codehaus.groovy</groupId>
+            <artifactId>groovy-sql</artifactId>
+            <version>3.0.4</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.codehaus.groovy</groupId>
+            <artifactId>groovy</artifactId>
+            <version>3.0.4</version>
+            <scope>test</scope>
+        </dependency>
+
+
+        <dependency>
+            <groupId>cglib</groupId>
+            <artifactId>cglib-nodep</artifactId>
+            <version>3.3.0</version>
+            <scope>test</scope>
+        </dependency>
+
+    </dependencies>
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.8.1</version>
+            </plugin>
+            <!-- Mandatory plugins for using Spock -->
+            <plugin>
+                <!-- The gmavenplus plugin is used to compile Groovy code. To learn more about this plugin,
+                visit https://github.com/groovy/GMavenPlus/wiki -->
+                <groupId>org.codehaus.gmavenplus</groupId>
+                <artifactId>gmavenplus-plugin</artifactId>
+                <version>1.9.0</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>compile</goal>
+                            <goal>compileTests</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.0.0-M5</version>
+                <configuration>
+                    <useFile>true</useFile>
+                    <includes>
+                        <include>**/*Test.java</include>
+                        <include>**/*Spec.java</include>
+                    </includes>
+                </configuration>
+            </plugin>
+
             <plugin>
                 <groupId>org.jetbrains.kotlin</groupId>
                 <artifactId>kotlin-maven-plugin</artifactId>
@@ -105,14 +183,14 @@
                 <executions>
                     <execution>
                         <id>compile</id>
-                        <phase>compile</phase>
+                        <phase>process-resources</phase>
                         <goals>
                             <goal>compile</goal>
                         </goals>
                     </execution>
                     <execution>
                         <id>test-compile</id>
-                        <phase>test-compile</phase>
+                        <phase>process-test-resources</phase>
                         <goals>
                             <goal>test-compile</goal>
                         </goals>
@@ -120,14 +198,25 @@
                 </executions>
                 <configuration>
                     <jvmTarget>1.8</jvmTarget>
+                    <compilerPlugins>
+                        <plugin>all-open</plugin>
+                    </compilerPlugins>
                 </configuration>
-            </plugin>
 
+                <dependencies>
+                    <dependency>
+                        <groupId>org.jetbrains.kotlin</groupId>
+                        <artifactId>kotlin-maven-allopen</artifactId>
+                        <version>${kotlin.version}</version>
+                    </dependency>
+                </dependencies>
+
+            </plugin>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>build-helper-maven-plugin</artifactId>
-                <executions>
-                    <!-- 添加主源码目录 -->
+                <version>3.1.0</version>
+                <executions><!-- 添加主源码目录 -->
                     <execution>
                         <id>add-source</id>
                         <phase>initialize</phase>
@@ -169,25 +258,8 @@
                             <removeAll>true</removeAll>
                         </configuration>
                     </execution>
-                    <execution>
-                        <id>timestamp-property</id>
-                        <phase>initialize</phase>
-                        <goals>
-                            <goal>timestamp-property</goal>
-                        </goals>
-                        <configuration>
-                            <locale>zh-CN</locale>
-                            <timeZone>GMT+8</timeZone>
-                            <name>NOW-yyyy-MM-dd-HH-mm</name>
-                            <pattern>yyyy-MM-dd-HH-mm</pattern>
-                        </configuration>
-                    </execution>
                 </executions>
             </plugin>
-
-
         </plugins>
     </build>
-
-
 </project>

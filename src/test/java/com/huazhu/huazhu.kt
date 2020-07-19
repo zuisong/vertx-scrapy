@@ -21,7 +21,7 @@ fun main() {
 
     val httpRequest = List(1200) {
         Request(
-                URL("https://b2b-h5.huazhu.com/search/goodsListJson"),
+                url = URL("https://b2b-h5.huazhu.com/search/goodsListJson"),
                 method = HttpMethod.POST,
                 headers = mapOf("Content-Type" to "application/x-www-form-urlencoded"),
                 body = "pageNo=${it}",
