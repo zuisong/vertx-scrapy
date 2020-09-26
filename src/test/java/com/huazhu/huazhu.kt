@@ -42,7 +42,7 @@ fun parseListPage(resp: HttpResponse<Buffer>, request: Request): Sequence<CrawlD
             .goodsVOList
             ?.forEach {
                 logger.info("{}, {}", request.body, it)
-                yield(Item(JsonObject(io.vertx.core.json.Json.encode(it))))
+                yield(Item(JsonObject(Json.encode(it))))
             }
 }
 
