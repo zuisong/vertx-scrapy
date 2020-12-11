@@ -24,10 +24,10 @@ val logger: Logger
  * @author zuisong
  */
 data class VertxSpiderOptions(
-        val delayMs: Long = 5000,
-        val concurrentSize: Int = 2,
-        val isWorkerMode: Boolean = false,
-        val pipeline: Pipeline = PrintPipeline()
+    val delayMs: Long = 5000,
+    val concurrentSize: Int = 2,
+    val isWorkerMode: Boolean = false,
+    val pipeline: Pipeline = PrintPipeline()
 )
 
 /**
@@ -42,7 +42,7 @@ interface RequestHolder {
  * 本机内存里的request容器
  */
 class LocalRequestHolder(
-        private val deque: Deque<Request> = ConcurrentLinkedDeque<Request>()
+    private val deque: Deque<Request> = ConcurrentLinkedDeque<Request>()
 ) : RequestHolder {
 
 
@@ -63,7 +63,7 @@ interface DuplicationPredictor<T> {
 }
 
 class SetDuplicationPredictor<T>(
-        private val set: MutableSet<T> = ConcurrentHashSet()
+    private val set: MutableSet<T> = ConcurrentHashSet()
 ) : DuplicationPredictor<T> {
     override fun add(t: T) {
         set.add(t)
@@ -93,8 +93,9 @@ class PrintPipeline : Pipeline {
  * 部署一个爬虫
  */
 fun deployVertxSpider(
-        vararg req: Request,
-        options: VertxSpiderOptions = VertxSpiderOptions()) {
+    vararg req: Request,
+    options: VertxSpiderOptions = VertxSpiderOptions()
+) {
     val vertx = Vertx.vertx(VertxOptions().apply {
         addressResolverOptions = AddressResolverOptions().apply {
             servers = listOf("114.114.114.114")
@@ -103,9 +104,9 @@ fun deployVertxSpider(
 
 
     vertx.deployVerticle(VertxScrapyVerticle(req.toList(), options),
-            DeploymentOptions().apply {
-                isWorker = options.isWorkerMode
-            })
+        DeploymentOptions().apply {
+            isWorker = options.isWorkerMode
+        })
 }
 
 typealias Parser = (resp: HttpResponse<Buffer>, req: Request) -> Sequence<CrawlData>
@@ -149,41 +150,41 @@ data class Item(val data: JsonObject) : CrawlData() {
 fun Request.urlJoin(str: String): URL = URL(url, fixupRelative(url.toString(), str))
 
 data class Request(
-        /**
-         * 请求链接
-         */
-        val url: URL,
-        /**
-         * 请求方法  默认 get
-         */
-        val method: HttpMethod = HttpMethod.GET,
-        /**
-         * 请求头
-         */
-        val headers: Map<String, String> = emptyMap(),
-        /**
-         * 请求体
-         */
-        val body: String = "",
-        /**
-         * 元数据  可以用来传到 parse里, 跨parser传数据用
-         */
-        val metaData: JsonObject = JsonObject(),
-        /**
-         * 解析body时的编码
-         */
-        val charset: Charset = Charsets.UTF_8,
-        /**
-         * 解析器, 解析 response 时用
-         */
-        val parser: Parser = ::defaultParser,
+    /**
+     * 请求链接
+     */
+    val url: URL,
+    /**
+     * 请求方法  默认 get
+     */
+    val method: HttpMethod = HttpMethod.GET,
+    /**
+     * 请求头
+     */
+    val headers: Map<String, String> = emptyMap(),
+    /**
+     * 请求体
+     */
+    val body: String = "",
+    /**
+     * 元数据  可以用来传到 parse里, 跨parser传数据用
+     */
+    val metaData: JsonObject = JsonObject(),
+    /**
+     * 解析body时的编码
+     */
+    val charset: Charset = Charsets.UTF_8,
+    /**
+     * 解析器, 解析 response 时用
+     */
+    val parser: Parser = ::defaultParser,
 
-        val shutDownTimeOut: Int = Int.MAX_VALUE
+    val shutDownTimeOut: Int = Int.MAX_VALUE
 ) : CrawlData()
 
 class VertxScrapyVerticle(
-        private val startURL: Collection<Request>,
-        private val options: VertxSpiderOptions = VertxSpiderOptions()
+    private val startURL: Collection<Request>,
+    private val options: VertxSpiderOptions = VertxSpiderOptions()
 ) : CoroutineVerticle() {
     /**
      * 保存待 爬取 的链接
@@ -197,13 +198,13 @@ class VertxScrapyVerticle(
     private val circuitBreaker: CircuitBreaker
             by lazy {
                 CircuitBreaker
-                        .create("httpclient", vertx, with(CircuitBreakerOptions()) {
-                            maxFailures = 5
-                            maxRetries = 5
-                            timeout = 10_000
-                            resetTimeout = 5000
-                            this
-                        })
+                    .create("httpclient", vertx, with(CircuitBreakerOptions()) {
+                        maxFailures = 5
+                        maxRetries = 5
+                        timeout = 10_000
+                        resetTimeout = 5000
+                        this
+                    })
             }
 
     /**
@@ -249,14 +250,14 @@ class VertxScrapyVerticle(
             val response = circuitBreaker.execute<HttpResponse<Buffer>> {
                 launch {
                     val response = webClient.requestAbs(req.method, req.url.toString())
-                            .apply {
-                                req.headers.forEach { (k, v) ->
-                                    putHeader(k, v)
-                                }
+                        .apply {
+                            req.headers.forEach { (k, v) ->
+                                putHeader(k, v)
                             }
-                            .timeout(0)
-                            .sendBuffer(Buffer.buffer(req.body))
-                            .await()
+                        }
+                        .timeout(0)
+                        .sendBuffer(Buffer.buffer(req.body))
+                        .await()
                     it.complete(response)
                 }
             }.await()
