@@ -4,7 +4,7 @@ package com
 import org.slf4j.LoggerFactory
 import spock.lang.Specification
 
-class KtSpockTest extends Specification {
+class KtSpockSpec extends Specification {
 
     def log = LoggerFactory.getLogger({}.getClass())
 

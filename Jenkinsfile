@@ -16,8 +16,8 @@ pipeline {
       steps {
         echo '构建中...'
         sh """
-                                                                           echo $PWD
-                                                                        """
+            echo $PWD
+        """
         sh '''
                     ls -lR
                 '''

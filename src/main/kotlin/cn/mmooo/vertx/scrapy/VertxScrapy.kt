@@ -76,7 +76,7 @@ class SetDuplicationPredictor<T>(
 interface Pipeline {
     fun open(vertx: Vertx)
     suspend fun process(item: Item)
-    fun close()
+    suspend fun close()
 }
 
 class PrintPipeline : Pipeline {
@@ -86,7 +86,7 @@ class PrintPipeline : Pipeline {
         println(item)
     }
 
-    override fun close() {}
+    override suspend fun close() {}
 }
 
 /**
@@ -231,9 +231,10 @@ class VertxScrapyVerticle(
             val req: Request? = requests.pop()
             if (req == null) {
 
-                if (System.currentTimeMillis() - lastCrawledTime > 5 * 5000) {
+                if (System.currentTimeMillis() - lastCrawledTime > TimeUnit.SECONDS.toMillis(5) * 5) {
                     logger.warn("all requests has been crawled! exit!")
                     stop()
+                    break
                 }
 
                 logger.warn("no more Request to crawl !")
