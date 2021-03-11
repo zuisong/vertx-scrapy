@@ -6,10 +6,14 @@
     <artifactId>vertx-scrapy</artifactId>
     <version>4.0.0</version>
     <properties>
-        <kotlin.version>1.4.21</kotlin.version>
+        <java.version>1.8</java.version>
+        <maven.compiler.source>${java.version}</maven.compiler.source>
+        <maven.compiler.target>${java.version}</maven.compiler.target>
+        <maven.compiler.compilerVersion>${java.version}</maven.compiler.compilerVersion>
+        <kotlin.version>1.4.31</kotlin.version>
         <jackson-bom.version>2.12.0</jackson-bom.version>
         <spock.version>2.0-M4-groovy-3.0</spock.version>
-        <groovy.version>3.0.7</groovy.version>
+        <junit-jupiter.version>5.7.0</junit-jupiter.version>
     </properties>
 
     <repositories>
@@ -26,6 +30,13 @@
     </pluginRepositories>
     <dependencyManagement>
         <dependencies>
+            <dependency>
+                <groupId>org.spockframework</groupId>
+                <artifactId>spock-bom</artifactId>
+                <version>${spock.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
             <dependency>
                 <groupId>org.jetbrains.kotlin</groupId>
                 <artifactId>kotlin-bom</artifactId>
@@ -47,15 +58,6 @@
                 <scope>import</scope>
                 <type>pom</type>
             </dependency>
-
-            <dependency>
-                <groupId>org.spockframework</groupId>
-                <artifactId>spock-bom</artifactId>
-                <version>${spock.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-
         </dependencies>
     </dependencyManagement>
     <dependencies>
@@ -110,20 +112,6 @@
             <scope>test</scope>
         </dependency>
 
-        <dependency>
-            <groupId>org.codehaus.groovy</groupId>
-            <artifactId>groovy-sql</artifactId>
-            <version>${groovy.version}</version>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.codehaus.groovy</groupId>
-            <artifactId>groovy</artifactId>
-            <version>${groovy.version}</version>
-            <scope>test</scope>
-        </dependency>
-
 
         <dependency>
             <groupId>cglib</groupId>
@@ -135,21 +123,15 @@
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
-            <version>5.7.0</version>
+            <version>${junit-jupiter.version}</version>
             <scope>test</scope>
         </dependency>
 
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-engine</artifactId>
-            <version>5.7.0</version>
+            <version>${junit-jupiter.version}</version>
             <scope>test</scope>
-        </dependency>
-
-
-        <dependency>
-            <groupId>org.spockframework</groupId>
-            <artifactId>spock-junit4</artifactId>
         </dependency>
 
     </dependencies>
@@ -217,7 +199,7 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <jvmTarget>1.8</jvmTarget>
+                    <jvmTarget>${java.version}</jvmTarget>
                     <compilerPlugins>
                         <plugin>all-open</plugin>
                     </compilerPlugins>
