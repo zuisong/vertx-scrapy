@@ -4,18 +4,22 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>cn.mmooo</groupId>
     <artifactId>vertx-scrapy</artifactId>
-    <version>4.0.0</version>
+    <version>4.0.3</version>
     <properties>
         <java.version>1.8</java.version>
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <maven.compiler.target>${java.version}</maven.compiler.target>
         <maven.compiler.compilerVersion>${java.version}</maven.compiler.compilerVersion>
+        <project.encoding>UTF-8</project.encoding>
+        <project.build.sourceEncoding>${project.encoding}</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>${project.encoding}</project.reporting.outputEncoding>
+        <maven.compiler.encoding>${project.encoding}</maven.compiler.encoding>
         <kotlin.version>1.4.31</kotlin.version>
         <jackson-bom.version>2.12.0</jackson-bom.version>
-        <spock.version>2.0-M4-groovy-3.0</spock.version>
+        <spock.version>2.0-M5-groovy-3.0</spock.version>
         <junit-jupiter.version>5.7.0</junit-jupiter.version>
+        <byte-buddy.version>1.10.22</byte-buddy.version>
     </properties>
-
     <repositories>
         <repository>
             <id>huawei</id>
@@ -104,36 +108,29 @@
             <artifactId>kotlin-stdlib-jdk8</artifactId>
             <version>${kotlin.version}</version>
         </dependency>
-
-
         <dependency>
             <groupId>org.spockframework</groupId>
             <artifactId>spock-core</artifactId>
             <scope>test</scope>
         </dependency>
-
-
-        <dependency>
-            <groupId>cglib</groupId>
-            <artifactId>cglib-nodep</artifactId>
-            <version>3.3.0</version>
-            <scope>test</scope>
-        </dependency>
-
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
             <version>${junit-jupiter.version}</version>
             <scope>test</scope>
         </dependency>
-
+        <dependency>
+            <groupId>net.bytebuddy</groupId>
+            <artifactId>byte-buddy</artifactId>
+            <version>${byte-buddy.version}</version>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-engine</artifactId>
             <version>${junit-jupiter.version}</version>
             <scope>test</scope>
         </dependency>
-
     </dependencies>
     <build>
         <plugins>
@@ -142,10 +139,7 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.8.1</version>
             </plugin>
-            <!-- Mandatory plugins for using Spock -->
             <plugin>
-                <!-- The gmavenplus plugin is used to compile Groovy code. To learn more about this plugin,
-                visit https://github.com/groovy/GMavenPlus/wiki -->
                 <groupId>org.codehaus.gmavenplus</groupId>
                 <artifactId>gmavenplus-plugin</artifactId>
                 <version>1.12.1</version>
@@ -164,7 +158,6 @@
                     </execution>
                 </executions>
             </plugin>
-
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
@@ -177,7 +170,6 @@
                     </includes>
                 </configuration>
             </plugin>
-
             <plugin>
                 <groupId>org.jetbrains.kotlin</groupId>
                 <artifactId>kotlin-maven-plugin</artifactId>
@@ -204,7 +196,6 @@
                         <plugin>all-open</plugin>
                     </compilerPlugins>
                 </configuration>
-
                 <dependencies>
                     <dependency>
                         <groupId>org.jetbrains.kotlin</groupId>
@@ -212,7 +203,6 @@
                         <version>${kotlin.version}</version>
                     </dependency>
                 </dependencies>
-
             </plugin>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
