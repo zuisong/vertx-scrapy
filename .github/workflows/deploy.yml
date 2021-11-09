@@ -1,16 +1,10 @@
-name: Java CI with Maven
+name: Deploy
 
-on:
-  push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
+on: workflow_dispatch
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v2
       - name: Set up JDK 1.8
@@ -18,4 +12,4 @@ jobs:
         with:
           java-version: 1.8
       - name: Build with Maven
-        run: mvn -B package --file pom.xml
+        run: mvn -B clean deploy --file pom.xml -Dregistry=https://maven.pkg.github.com/phanatic -Dtoken=${{ secrets.GITHUB_TOKEN }}
