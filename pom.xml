@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>cn.mmooo</groupId>
     <artifactId>vertx-scrapy</artifactId>
-    <version>4.2.6</version>
+    <version>4.3.3</version>
     <properties>
         <jdk.version>1.8</jdk.version>
         <maven.compiler.source>${jdk.version}</maven.compiler.source>
@@ -14,10 +14,10 @@
         <project.build.sourceEncoding>${project.encoding}</project.build.sourceEncoding>
         <project.reporting.outputEncoding>${project.encoding}</project.reporting.outputEncoding>
         <maven.compiler.encoding>${project.encoding}</maven.compiler.encoding>
-        <kotlin.version>1.6.10</kotlin.version>
-        <jackson-bom.version>2.13.2</jackson-bom.version>
+        <kotlin.version>1.7.10</kotlin.version>
+        <jackson-bom.version>2.13.3</jackson-bom.version>
         <spock.version>2.1-groovy-3.0</spock.version>
-        <byte-buddy.version>1.12.8</byte-buddy.version>
+        <byte-buddy.version>1.12.14</byte-buddy.version>
     </properties>
     <dependencyManagement>
         <dependencies>
@@ -75,7 +75,7 @@
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
-            <version>1.2.3</version>
+            <version>1.2.11</version>
             <scope>compile</scope>
             <optional>true</optional>
         </dependency>
@@ -87,7 +87,7 @@
         <dependency>
             <groupId>org.jsoup</groupId>
             <artifactId>jsoup</artifactId>
-            <version>1.14.3</version>
+            <version>1.15.3</version>
             <scope>test</scope>
         </dependency>
         <dependency>
